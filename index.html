@@ -3,27 +3,26 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>光電效應實驗模擬器（終極整合版）</title>
+  <title>光電效應實驗模擬器（公制單位版）</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     /* --- 全域設定 --- */
     body {
       font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      background: radial-gradient(circle at 20% 20%, #1e1b4b, #0f172a); /* 深藍色系背景 */
+      background: radial-gradient(circle at 20% 20%, #1e1b4b, #0f172a);
       color: #e2e8f0;
       overflow-x: hidden;
       margin: 0;
     }
 
-    /* --- UI 面板質感 (Glassmorphism) --- */
+    /* --- UI 面板質感 --- */
     .panel {
-      background: rgba(30, 41, 59, 0.75);
+      background: rgba(30, 41, 59, 0.85);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       border: 1px solid rgba(255, 255, 255, 0.1);
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
       border-radius: 16px;
-      transition: transform 0.2s;
     }
 
     /* --- 滑桿美化 --- */
@@ -42,7 +41,7 @@
       width: 20px;
       height: 20px;
       border-radius: 50%;
-      background: #38bdf8; /* Sky Blue */
+      background: #38bdf8;
       box-shadow: 0 0 15px rgba(56, 189, 248, 0.6);
       margin-top: -7px;
       transition: transform 0.1s;
@@ -77,7 +76,7 @@
       letter-spacing: -1px;
     }
 
-    /* --- 專業儀器：光學發射器 (CSS 繪製) --- */
+    /* --- 光學儀器 CSS --- */
     .optical-device {
       position: absolute;
       width: 90px;
@@ -90,7 +89,6 @@
       flex-direction: column;
       align-items: center;
       z-index: 20;
-      /* 定位在左側 */
       left: 40px;
       top: 50%;
       transform: translateY(-50%);
@@ -120,11 +118,11 @@
       border: 1px solid rgba(255,255,255,0.1);
     }
 
-    /* --- 右上角電流計 --- */
+    /* --- 電流計 --- */
     .ammeter-box {
       position: absolute; top: 20px; right: 20px;
       background: #0f172a; border: 2px solid #334155;
-      border-radius: 8px; padding: 10px; width: 120px;
+      border-radius: 8px; padding: 10px; width: 140px; /* 稍微加寬以容納科學記號 */
       text-align: center; z-index: 20;
       box-shadow: 0 10px 20px rgba(0,0,0,0.5);
     }
@@ -134,9 +132,9 @@
 
   <header class="text-center mb-6 w-full max-w-6xl">
     <h1 class="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
-      光電效應實驗室 <span class="text-sm text-slate-400 border border-slate-600 rounded px-2 py-0.5 ml-2 align-middle">Pro</span>
+      光電效應實驗室 <span class="text-sm text-slate-300 border border-slate-600 rounded px-2 py-0.5 ml-2 align-middle">SI Metric</span>
     </h1>
-    <p class="text-slate-400 text-xs md:text-sm mt-1">Photoelectric Effect: Interactive Simulation</p>
+    <p class="text-slate-400 text-xs md:text-sm mt-1">Photoelectric Effect: SI Units Simulation (Joules, Volts, Amperes)</p>
   </header>
 
   <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full max-w-7xl">
@@ -150,10 +148,10 @@
 
         <div class="group">
           <div class="flex justify-between text-sm mb-2">
-            <label class="text-gray-300">入射光頻率 (×10¹⁴ Hz)</label>
-            <span id="val-freq" class="font-mono text-cyan-300 font-bold">6.0</span>
+            <label class="text-gray-300">入射光頻率</label>
+            <span class="font-mono text-cyan-300 font-bold"><span id="val-freq">6.0</span> ×10¹⁴ Hz</span>
           </div>
-          <input id="inp-freq" type="range" min="3" max="12" step="0.1" value="6" />
+          <input id="inp-freq" type="range" min="3" max="15" step="0.1" value="6" />
           <div class="h-1 w-full mt-2 rounded bg-gradient-to-r from-red-500 via-green-500 to-purple-500 opacity-70"></div>
         </div>
 
@@ -168,10 +166,10 @@
         <div>
           <div class="flex justify-between text-sm mb-2">
             <label class="text-gray-300">金屬臨界頻率 f₀</label>
-            <span id="val-thresh" class="font-mono text-orange-300 font-bold">7.0</span>
+            <span class="font-mono text-orange-300 font-bold"><span id="val-thresh">7.0</span> ×10¹⁴ Hz</span>
           </div>
-          <input id="inp-thresh" type="range" min="3" max="10" step="0.1" value="7" />
-          <div class="text-xs text-right text-slate-500 mt-1">功函數 Φ ≈ <span id="disp-work">4.64</span> eV</div>
+          <input id="inp-thresh" type="range" min="3" max="12" step="0.1" value="7" />
+          <div class="text-xs text-right text-slate-500 mt-1">功函數 Φ ≈ <span id="disp-work">4.64e-19</span> J</div>
         </div>
 
         <div class="bg-black/30 p-4 rounded-xl border border-white/10">
@@ -179,7 +177,7 @@
             <label class="text-gray-200 font-bold">反向電壓 (V)</label>
             <span id="val-volt" class="font-mono text-red-400 text-xl font-bold">0.00</span>
           </div>
-          <input id="inp-volt" type="range" min="0" max="10" step="0.05" value="0" />
+          <input id="inp-volt" type="range" min="0" max="5" step="0.01" value="0" />
           
           <div class="flex gap-2 mt-4">
             <button id="btn-measure" class="flex-1 btn-primary text-white text-xs py-2 rounded flex justify-center items-center gap-2 font-bold">
@@ -195,21 +193,21 @@
 
       <div class="panel p-5 space-y-4">
         <div class="text-center">
-          <div class="text-gray-500 text-xs mb-1 uppercase tracking-wider">Einstein's Equation</div>
-          <div class="font-mono text-sm text-cyan-300 bg-black/40 border border-white/5 rounded py-2 px-3 inline-block">
+          <div class="text-gray-500 text-xs mb-1 uppercase tracking-wider">Einstein's Equation (Joules)</div>
+          <div class="font-mono text-[11px] md:text-xs text-cyan-300 bg-black/40 border border-white/5 rounded py-2 px-3 inline-block whitespace-nowrap">
             <span id="eq-photon">0.00</span> = <span id="eq-work" class="text-orange-300">0.00</span> + <span id="eq-ke" class="text-white">0.00</span>
           </div>
-          <div class="text-gray-600 text-[10px] mt-1">(hν = Φ + Kmax) 单位: eV</div>
+          <div class="text-gray-600 text-[10px] mt-1">(hν = Φ + Kmax)</div>
         </div>
 
         <div class="grid grid-cols-2 gap-4 border-t border-white/10 pt-4">
            <div class="text-center">
              <div class="text-xs text-slate-400">最大動能 (Kmax)</div>
-             <div class="text-lg font-mono text-white"><span id="disp-ke">0.00</span> eV</div>
+             <div class="text-sm md:text-base font-mono text-white"><span id="disp-ke">0.00</span> J</div>
            </div>
            <div class="text-center">
              <div class="text-xs text-green-400">光電流 (I)</div>
-             <div class="text-lg font-mono text-green-300"><span id="disp-curr">0.00</span> nA</div>
+             <div class="text-sm md:text-base font-mono text-green-300"><span id="disp-curr">0.00</span> A</div>
            </div>
         </div>
       </div>
@@ -235,8 +233,8 @@
 
           <div class="ammeter-box">
             <div class="text-[9px] text-slate-400 uppercase font-bold tracking-widest mb-1">AMMETER</div>
-            <div id="ammeter-val" class="font-digital text-2xl text-green-500">0.00</div>
-            <div class="text-[10px] text-slate-500">nA</div>
+            <div id="ammeter-val" class="font-digital text-lg text-green-500">0.00</div>
+            <div class="text-[10px] text-slate-500">Amperes (A)</div>
           </div>
 
           <canvas id="canvas-tube" class="absolute inset-0 w-full h-full z-0"></canvas>
@@ -251,7 +249,7 @@
             <span class="text-[10px] text-slate-500">Real-time Data</span>
           </div>
           <div class="flex-1 bg-black/20 rounded border border-white/5 relative overflow-hidden">
-             <canvas id="chart-curr" class="absolute inset-0 w-full h-full"></canvas>
+              <canvas id="chart-curr" class="absolute inset-0 w-full h-full"></canvas>
           </div>
         </div>
 
@@ -263,7 +261,7 @@
             </button>
           </div>
           <div class="flex-1 bg-black/20 rounded border border-white/5 relative overflow-hidden">
-             <canvas id="chart-stop" class="absolute inset-0 w-full h-full"></canvas>
+              <canvas id="chart-stop" class="absolute inset-0 w-full h-full"></canvas>
           </div>
         </div>
 
@@ -273,11 +271,10 @@
 
 <script>
 /**
- * 光電效應模擬器核心腳本
- * 包含：物理計算、動畫渲染、UI互動、圖表繪製
+ * 光電效應模擬器 (SI 公制單位版)
+ * 使用真實物理常數計算：Joules, Coulombs, Hertz, Volts
  */
 
-// 等待 DOM 完全載入後執行，防止找不到元素錯誤
 document.addEventListener('DOMContentLoaded', () => {
 
   // --- 1. 全域變數與 DOM 綁定 ---
@@ -319,39 +316,58 @@ document.addEventListener('DOMContentLoaded', () => {
     stop: els.cStop.getContext('2d')
   };
 
-  // 物理常數與狀態
-  const H_CONST = 0.66; // 簡化後的普朗克常數，方便數值展示 (eV·s / 10^14)
+  // --- 真實物理常數 (SI Units) ---
+  const H = 6.626e-34; // 普朗克常數 (J·s)
+  const Q = 1.602e-19; // 基本電荷 (C)
+  const SCALE_FREQ = 1e14; // 滑桿數值的倍率 (x10^14 Hz)
+  const SCALE_CURRENT = 1e-9; // 模擬電流的基礎單位 (1單位 = 1nA = 1e-9 A)
   
   // 系統狀態
   let state = {
-    w: 0, h: 0,             // Canvas 尺寸
-    photons: [],            // 光子陣列
-    electrons: [],          // 電子陣列
-    sparks: [],             // 火花特效
-    history: [],            // 電流歷史數據 (用於繪圖)
-    stopPoints: [],         // 測量過的截止電壓點 {f, v}
-    measuring: false,       // 是否正在自動測量中
-    measureTimer: null      // 測量計時器 ID
+    w: 0, h: 0,
+    photons: [],
+    electrons: [],
+    sparks: [],
+    history: [],
+    stopPoints: [],
+    measuring: false,
+    measureTimer: null
   };
   
   // 當前物理數值緩存
   let phys = {
-    f: 6, i: 5, t: 7, v: 0,
-    E_photon: 0, Work: 0, K_max: 0, V_stop: 0,
-    current: 0, fraction: 0
+    f_input: 6, // 滑桿值
+    f_hz: 6e14, // 真實頻率
+    i: 5,
+    t_input: 7,
+    t_hz: 7e14,
+    v: 0,
+    
+    E_joule: 0,
+    W_joule: 0,
+    K_joule: 0,
+    V_stop: 0, // Volts
+    current: 0, // Amperes
+    fraction: 0
   };
+
+  // 輔助：科學記號格式化
+  function toSci(num, decimal = 2) {
+    if (num === 0) return "0.00";
+    // 處理極小數值的顯示優化
+    if (Math.abs(num) < 1e-25) return "0.00"; 
+    return num.toExponential(decimal).replace("e+", "e").replace("e", "e");
+  }
 
   // --- 2. 初始化 (Init) ---
   function init() {
     handleResize();
     window.addEventListener('resize', handleResize);
 
-    // 綁定輸入事件 (即時響應)
     [els.freq, els.int, els.thresh, els.volt].forEach(inp => {
       inp.addEventListener('input', onInput);
     });
 
-    // 按鈕事件
     els.bReset.addEventListener('click', resetSim);
     els.bClear.addEventListener('click', () => {
       state.stopPoints = [];
@@ -359,25 +375,22 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     els.bMeasure.addEventListener('click', startAutoMeasure);
 
-    // 啟動主循環
-    updatePhysics(); // 先算一次
+    updatePhysics();
     requestAnimationFrame(animationLoop);
   }
 
   function handleResize() {
-    // 設定 Canvas 的解析度為其實際顯示大小
     [els.cTube, els.cCurr, els.cStop].forEach(c => {
-      const rect = c.parentElement.getBoundingClientRect(); // 抓父容器大小
+      const rect = c.parentElement.getBoundingClientRect();
       c.width = rect.width;
       c.height = rect.height;
     });
     state.w = els.cTube.width;
     state.h = els.cTube.height;
-    drawStopChart(); // 重繪靜態圖
+    drawStopChart();
   }
 
   function onInput() {
-    // 如果正在自動測量，禁止手動調整電壓，避免衝突
     if (state.measuring && this === els.volt) return;
     updatePhysics();
   }
@@ -403,84 +416,98 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- 3. 核心物理引擎 (Physics Engine) ---
   function updatePhysics() {
-    const f = parseFloat(els.freq.value);
-    const i = parseInt(els.int.value);
-    const t = parseFloat(els.thresh.value);
-    const v = parseFloat(els.volt.value);
+    // 讀取輸入
+    const f_in = parseFloat(els.freq.value);
+    const i_in = parseInt(els.int.value);
+    const t_in = parseFloat(els.thresh.value);
+    const v_in = parseFloat(els.volt.value); // 反向電壓 (Volts)
 
-    // 1. 能量計算
-    const E_photon = H_CONST * f;         // 光子能量
-    const Work = H_CONST * t;             // 功函數
-    const K_max = Math.max(0, E_photon - Work); // 最大動能 (不能為負)
-    const V_stop = K_max;                 // 截止電壓數值 (eV -> V)
+    // 換算為公制
+    const f_hz = f_in * SCALE_FREQ;
+    const t_hz = t_in * SCALE_FREQ;
 
-    // 2. 電流計算 (模擬實驗現象)
-    // fraction 代表「有多少比例的電子能到達陽極」
+    // 1. 能量計算 (Joules)
+    const E_joule = H * f_hz;       // E = hf
+    const W_joule = H * t_hz;       // W = hf0
+    const K_joule = Math.max(0, E_joule - W_joule); // Kmax = E - W
+
+    // 2. 截止電壓 (Volts)
+    // Kmax (J) = q (C) * Vstop (V)  => Vstop = Kmax / q
+    const V_stop = K_joule / Q; 
+
+    // 3. 電流計算 (模擬)
     let fraction = 0;
     
-    if (K_max > 0) {
-      if (v >= V_stop) {
-        fraction = 0; // 電壓過大，完全擋住
-      } else if (v < 0) {
-        fraction = 1; // 加速電壓，全部通過
+    if (K_joule > 0) {
+      if (v_in >= V_stop) {
+        fraction = 0;
+      } else if (v_in < 0) {
+        fraction = 1; // 加速電壓
       } else {
-        // 簡單線性衰減模擬：電壓越接近 V_stop，通過越少
-        // 真實物理是積分分佈，但這對教學模擬夠用了
-        fraction = 1 - (v / V_stop);
+        // 線性模擬：電壓越接近 V_stop，電流越小
+        fraction = 1 - (v_in / V_stop);
       }
     }
     
-    // 電流 = 光強度 * 通過率 * 係數
-    const current = i * fraction * 2.5;
+    // 計算模擬電流 (Amperes)
+    // 假設最大光強對應約 12 * 2.5 nA 的等級
+    const current_amp = i_in * fraction * 2.5 * SCALE_CURRENT;
 
-    // 3. 更新全域狀態
-    phys = { f, i, t, v, E_photon, Work, K_max, V_stop, current, fraction };
+    // 4. 更新全域狀態
+    phys = { 
+      f_input: f_in, f_hz, 
+      i: i_in, 
+      t_input: t_in, t_hz, 
+      v: v_in,
+      E_joule, W_joule, K_joule, V_stop, 
+      current: current_amp, 
+      fraction 
+    };
 
-    // 4. 更新 UI 顯示
-    els.vFreq.innerText = f.toFixed(1);
-    els.vInt.innerText = i;
-    els.vThresh.innerText = t.toFixed(1);
-    els.vVolt.innerText = v.toFixed(2);
+    // 5. 更新 UI
+    els.vFreq.innerText = f_in.toFixed(1);
+    els.vInt.innerText = i_in;
+    els.vThresh.innerText = t_in.toFixed(1);
+    els.vVolt.innerText = v_in.toFixed(2);
     
-    els.dWork.innerText = Work.toFixed(2);
-    els.dKe.innerText = K_max.toFixed(2);
-    els.dCurr.innerText = current.toFixed(2);
+    // 使用科學記號顯示能量
+    els.dWork.innerText = toSci(W_joule);
+    els.dKe.innerText = toSci(K_joule);
+    els.dCurr.innerText = toSci(current_amp);
     
-    els.eqP.innerText = E_photon.toFixed(2);
-    els.eqW.innerText = Work.toFixed(2);
-    els.eqK.innerText = K_max.toFixed(2);
+    els.eqP.innerText = toSci(E_joule);
+    els.eqW.innerText = toSci(W_joule);
+    els.eqK.innerText = toSci(K_joule);
 
-    // 5. 更新儀器視覺
-    els.ammeter.innerText = current.toFixed(2);
+    // 更新儀器
+    els.ammeter.innerText = toSci(current_amp);
     
-    // 光學儀器顏色與亮度
-    const color = getHslColor(f);
-    els.lFreq.innerText = f.toFixed(1) + " Hz";
+    const color = getHslColor(f_in);
+    els.lFreq.innerText = f_in.toFixed(1) + "e14 Hz";
     els.lFreq.style.color = color;
     
-    if (i > 0) {
+    if (i_in > 0) {
       els.lens.style.backgroundColor = color;
-      const glow = i * 3;
+      const glow = i_in * 3;
       els.lens.style.boxShadow = `0 0 ${glow}px ${color}`;
     } else {
       els.lens.style.backgroundColor = '#000';
       els.lens.style.boxShadow = 'none';
     }
 
-    // 6. 記錄歷史數據 (供圖表用)
-    state.history.push(current);
+    // 記錄歷史 (儲存為 nA 以便繪圖顯示幅度，或直接存 Amp 但繪圖時正規化)
+    // 這裡為了繪圖方便，我們存 "相對強度" (0-30 scale)
+    state.history.push(phys.current / SCALE_CURRENT); 
     if(state.history.length > 200) state.history.shift();
 
-    // 7. 刷新截止電壓圖上的「目前位置」
     drawStopChart();
   }
 
-  // --- 4. 自動測量功能 (Auto Measure) ---
+  // --- 4. 自動測量功能 ---
   function startAutoMeasure() {
     if (state.measuring) return;
     
-    // 檢查是否有電流可測
-    if (phys.K_max <= 0) {
+    if (phys.K_joule <= 1e-25) { // 能量極小視為 0
       alert("能量不足 (f < f₀)，無光電子產生，無法測量截止電壓。");
       return;
     }
@@ -490,26 +517,22 @@ document.addEventListener('DOMContentLoaded', () => {
     els.bMeasure.innerText = "測量中...";
     els.volt.disabled = true;
     
-    // 從 0V 開始掃描
     els.volt.value = 0;
     updatePhysics();
 
     state.measureTimer = setInterval(() => {
       let v = parseFloat(els.volt.value);
-      v += 0.05; // 每次增加 0.05V
-      
-      // 安全中止
-      if (v > 10) v = 10;
+      v += 0.02; // 稍微放慢步進以求精確
+      if (v > 5) v = 5; // 限制最大掃描電壓
       
       els.volt.value = v;
       updatePhysics();
 
-      // 判定截止：當電流小於極小值，或電壓超過 10V
-      // 為了視覺效果，我們讓它跑過截止點一點點
-      if (phys.current <= 0.02 || v >= 10) {
+      // 當電流歸零 (小於極小值)
+      if (phys.current <= 0.05 * SCALE_CURRENT || v >= 5) {
         finishMeasure();
       }
-    }, 20); // 每 20ms 更新一次
+    }, 20);
   }
 
   function finishMeasure() {
@@ -519,23 +542,19 @@ document.addEventListener('DOMContentLoaded', () => {
     els.bMeasure.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> 自動測量截止電壓`;
     els.volt.disabled = false;
 
-    // 記錄測量結果
-    // 為了圖表精確展示教學原理，我們儲存理論值
-    state.stopPoints.push({ f: phys.f, v: phys.V_stop });
+    state.stopPoints.push({ f: phys.f_input, v: phys.V_stop });
     drawStopChart();
   }
 
-  // --- 5. 動畫渲染 (Canvas Rendering) ---
+  // --- 5. 動畫渲染 ---
   function animationLoop() {
     const ctx = ctxs.tube;
     const w = state.w;
     const h = state.h;
 
-    // 1. 清空畫布
     ctx.clearRect(0, 0, w, h);
 
-    // 2. 繪製極板
-    // 左板 (陰極 Cathode) - 接收光子
+    // 極板
     const plateY = h * 0.25;
     const plateH = h * 0.5;
     const cathX = w * 0.25;
@@ -546,29 +565,26 @@ document.addEventListener('DOMContentLoaded', () => {
     ctx.fillStyle = '#94a3b8';
     ctx.fillRect(anoX, plateY, 8, plateH);
 
-    // 3. 發射光子
-    // 從左側儀器發射口 (約 left: 85px 處) 發出
-    // 我們的 CSS 儀器大概在那個位置，這裡做視覺對齊
+    // 發射光子
     if (phys.i > 0 && Math.random() < phys.i * 0.05) {
       state.photons.push({
         x: 85, 
-        y: h / 2, // 儀器中心高度
-        tx: cathX, // 目標：陰極
-        ty: plateY + Math.random() * plateH, // 隨機打在板上
+        y: h / 2, 
+        tx: cathX, 
+        ty: plateY + Math.random() * plateH, 
         progress: 0,
-        color: getHslColor(phys.f)
+        color: getHslColor(phys.f_input)
       });
     }
 
-    // 4. 更新並繪製光子
+    // 光子邏輯
     for (let i = state.photons.length - 1; i >= 0; i--) {
       let p = state.photons[i];
-      p.progress += 0.05; // 飛行速度
+      p.progress += 0.05;
 
       let cx = p.x + (p.tx - p.x) * p.progress;
       let cy = p.y + (p.ty - p.y) * p.progress;
 
-      // 畫軌跡
       ctx.beginPath();
       ctx.strokeStyle = p.color;
       ctx.lineWidth = 2;
@@ -577,40 +593,37 @@ document.addEventListener('DOMContentLoaded', () => {
       ctx.lineTo(cx, cy);
       ctx.stroke();
       
-      // 畫頭部
       ctx.beginPath();
       ctx.fillStyle = '#fff';
       ctx.arc(cx, cy, 2, 0, Math.PI*2);
       ctx.fill();
 
       if (p.progress >= 1) {
-        // 撞擊判定
         createSpark(cx, cy, p.color);
-        // 激發電子 (機率)
-        if (phys.K_max > 0 && Math.random() > 0.3) {
+        // 有動能才產生電子
+        if (phys.K_joule > 0 && Math.random() > 0.3) {
           spawnElectron(cx, cy);
         }
         state.photons.splice(i, 1);
       }
     }
 
-    // 5. 更新並繪製電子
-    ctx.fillStyle = '#60a5fa'; // Electron Blue
+    // 電子邏輯
+    ctx.fillStyle = '#60a5fa';
     ctx.shadowBlur = 5;
     ctx.shadowColor = '#3b82f6';
 
     for (let i = state.electrons.length - 1; i >= 0; i--) {
       let e = state.electrons[i];
       
-      // 電子運動邏輯
       let moveSpeed = e.vx;
       
-      // 模擬反向電壓減速效果
-      // 如果 e.willPass 為 false，表示這個電子能量不足以克服電壓
+      // 反向電壓減速邏輯
+      // V_stop 代表需要多少電壓才能完全擋住
+      // 如果 !e.willPass，代表此電子被擋住
       if (!e.willPass && e.x > (cathX + anoX) * 0.4) {
-         // 走到一半減速並回頭
          moveSpeed = e.vx * (1 - (e.life / 40)); 
-         if (moveSpeed < -2) moveSpeed = -2; // 最大回頭速度
+         if (moveSpeed < -2) moveSpeed = -2;
       }
 
       e.x += moveSpeed;
@@ -621,33 +634,26 @@ document.addEventListener('DOMContentLoaded', () => {
       ctx.arc(e.x, e.y, 3, 0, Math.PI*2);
       ctx.fill();
 
-      // 到達陽極
       if (e.x >= anoX) {
         if (e.willPass) createSpark(e.x, e.y, '#93c5fd');
         state.electrons.splice(i, 1);
         continue;
       }
-      // 消失 (出界或回頭太遠)
       if (e.x < cathX - 20 || e.y < 0 || e.y > h || e.life > 200) {
         state.electrons.splice(i, 1);
       }
     }
     ctx.shadowBlur = 0;
 
-    // 6. 繪製火花
     drawSparks(ctx);
-
-    // 7. 繪製即時電流圖表
     drawCurrentChart();
 
     requestAnimationFrame(animationLoop);
   }
 
   function spawnElectron(x, y) {
-    // 根據當前 fraction 決定這顆電子命運 (是否通過)
     const willPass = Math.random() < phys.fraction;
     const baseSpeed = 2 + Math.random() * 2;
-    
     state.electrons.push({
       x: x, y: y,
       vx: baseSpeed,
@@ -684,14 +690,13 @@ document.addEventListener('DOMContentLoaded', () => {
     ctx.globalAlpha = 1;
   }
 
-  // --- 6. 圖表繪製 (Charting) ---
+  // --- 6. 圖表繪製 ---
   function drawCurrentChart() {
     const ctx = ctxs.curr;
     const w = ctx.canvas.width;
     const h = ctx.canvas.height;
     ctx.clearRect(0, 0, w, h);
     
-    // 網格線
     ctx.strokeStyle = 'rgba(255,255,255,0.1)';
     ctx.beginPath(); ctx.moveTo(0, h/2); ctx.lineTo(w, h/2); ctx.stroke();
 
@@ -701,9 +706,10 @@ document.addEventListener('DOMContentLoaded', () => {
     ctx.strokeStyle = '#4ade80';
     ctx.lineWidth = 2;
 
-    const maxVal = 30; // 固定 Y 軸範圍
+    const maxVal = 35; // 對應大約的顯示範圍
     for (let i = 0; i < state.history.length; i++) {
       const x = (i / 200) * w;
+      // state.history 存的是相對值 (nA 數值)，所以直接用
       const y = h - (state.history[i] / maxVal) * h;
       if (i === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
@@ -717,32 +723,36 @@ document.addEventListener('DOMContentLoaded', () => {
     const h = ctx.canvas.height;
     ctx.clearRect(0, 0, w, h);
 
-    // 座標軸
+    // 軸線
     ctx.strokeStyle = '#94a3b8';
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(30, h - 20); ctx.lineTo(w, h - 20); // X
-    ctx.moveTo(30, h - 20); ctx.lineTo(30, 0);     // Y
+    ctx.moveTo(35, h - 20); ctx.lineTo(w, h - 20);
+    ctx.moveTo(35, h - 20); ctx.lineTo(35, 0);
     ctx.stroke();
 
-    // 文字標籤
+    // 標籤
     ctx.fillStyle = '#cbd5e1';
     ctx.font = '10px Arial';
-    ctx.fillText('Freq (f)', w - 40, h - 5);
-    ctx.fillText('Stop V', 5, 15);
+    ctx.fillText('f (x10¹⁴)', w - 45, h - 5);
+    ctx.fillText('V stop', 2, 12);
 
-    // 映射函式
-    const fMin = 3, fMax = 12;
-    const vMax = 10;
-    const mapX = (f) => 30 + ((f - fMin) / (fMax - fMin)) * (w - 30);
+    // 映射 (X: 頻率係數, Y: 電壓 Volts)
+    const fMin = 3, fMax = 15;
+    const vMax = 4; // 調整顯示範圍以適應真實數值
+    const mapX = (f) => 35 + ((f - fMin) / (fMax - fMin)) * (w - 35);
     const mapY = (v) => (h - 20) - (v / vMax) * (h - 20);
 
-    // 1. 繪製理論虛線 (Slope = h)
-    // V = h*f - W
-    const fStart = Math.max(fMin, phys.t); // 從截止頻率開始畫
+    // 1. 理論線 (Slope = h/e)
+    // V = (h/e)*f - (W/e)
+    const slope = (H * SCALE_FREQ) / Q; // 約 0.41 V per 10^14 Hz
+    
+    const fStart = Math.max(fMin, phys.t_input);
     if (fStart < fMax) {
       const vStart = 0;
-      const vEnd = H_CONST * (fMax - phys.t);
+      // 計算 fMax 處的理論 V_stop
+      // V = (h * (fMax - f0) * 10^14) / e
+      const vEnd = (H * (fMax - phys.t_input) * SCALE_FREQ) / Q;
       
       ctx.beginPath();
       ctx.strokeStyle = 'rgba(56, 189, 248, 0.3)';
@@ -753,7 +763,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ctx.setLineDash([]);
     }
 
-    // 2. 繪製測量點 (紅色)
+    // 2. 測量點
     ctx.fillStyle = '#f87171';
     state.stopPoints.forEach(p => {
       ctx.beginPath();
@@ -761,32 +771,27 @@ document.addEventListener('DOMContentLoaded', () => {
       ctx.fill();
     });
 
-    // 3. 繪製當前狀態預覽點 (黃色) - 僅當有動能時
-    if (phys.K_max > 0) {
-      const cx = mapX(phys.f);
-      const cy = mapY(phys.K_max);
+    // 3. 當前點
+    if (phys.K_joule > 0) {
+      const cx = mapX(phys.f_input);
+      const cy = mapY(phys.V_stop);
       
       ctx.fillStyle = '#facc15';
       ctx.beginPath();
       ctx.arc(cx, cy, 5, 0, Math.PI * 2);
       ctx.fill();
       
-      // 標示文字
       ctx.fillStyle = '#fff';
-      ctx.fillText("Current", cx + 8, cy);
+      ctx.fillText("Now", cx + 8, cy);
     }
   }
 
-  // 輔助：頻率轉顏色 (HSL)
   function getHslColor(f) {
-    // 頻率 3 (紅) ~ 12 (紫)
-    // Hue 0 (Red) ~ 270 (Purple)
-    const ratio = (f - 3) / 9;
+    const ratio = (f - 3) / 12;
     const hue = ratio * 270; 
     return `hsl(${300 - hue}, 100%, 60%)`;
   }
 
-  // 啟動！
   init();
 
 });
