@@ -655,35 +655,57 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- 生成電子 (決定命運的地方) ---
+ // --- 生成電子 (比例算法修正版) ---
   function spawnElectron(x, y) {
-  // 1. 隨機決定這顆電子的能量 (0% ~ 100% 的最大動能)
-    const myEnergyRatio = Math.random(); 
-    const myEnergy = phys.K_joule * myEnergyRatio;
+    const w = state.w;
+    const cathX = w * 0.25;
+    const anoX = w * 0.75;
+    const dist = anoX - cathX;
+
+  // 1. 取得關鍵數值
+  // V_stop: 電子最大動能對應的截止電壓 (由 updatePhysics 算出)
+  // v_in: 目前施加的反向電壓
+    const V_max_energy = phys.V_stop; 
+    const V_barrier = phys.v;         
+
+  // 2. 隨機賦予這顆電子能量比例 (0.0 ~ 1.0)
+  // 使用 pow(random, 1.5) 讓低能電子稍微多一點點，這樣視覺上攔截效果更明顯
+    const energyRatio = Math.pow(Math.random(), 1.5);
   
-  // 2. 計算反向電壓形成的能量障壁 (Barrier = q * V)
-    const barrierEnergy = phys.v * Q; // Q 是全域變數 1.602e-19
+  // 這顆電子的能量 (換算成電壓單位 eV)
+    const myEnergy_eV = V_max_energy * energyRatio;
 
-    let turnX = null; // 預設為 null 表示會通過
-    let speed = 2 + myEnergyRatio * 4; // 視覺速度：能量越大飛越快
+    let turnX = null;
+  // 基礎飛行速度
+    let speed = 2 + energyRatio * 4; 
 
-  // 3. 關鍵判斷：如果 "反向電壓存在" 且 "我的能量 < 障壁能量" -> 必須折返
-    if (phys.v > 0 && myEnergy < barrierEnergy) {
-     // 計算折返點：能量越低，越早折返；能量越高，飛越遠才折返
-       const dist = state.anoX - state.cathX;
-     
-     // 算出它能克服幾成的障壁 (0.0 ~ 1.0)
-     // 限制最多飛到 95% 的距離 (避免看起來像撞到對面才回頭，那樣很怪)
-       let progress = myEnergy / barrierEnergy;
-       if (progress > 0.95) progress = 0.95;
-     
-       turnX = state.cathX + 10 + (dist * progress);
+  // --- 3. 絕對判斷邏輯 ---
+  
+  // 情況 A: 根本沒有光電子 (頻率太低) -> 雖然 spawn 不應該被呼叫，但防呆
+    if (V_max_energy <= 0) {
+        speed = 0; // 不會動
+    }
+  // 情況 B: 有反向電壓，且 反向電壓 > 這顆電子的能量 -> 必須折返
+    else if (V_barrier > 0.01 && V_barrier > myEnergy_eV) {
+      
+      // 計算它能跑多遠： (電子能量 / 障壁高度)
+      // 比例越高跑越遠，但絕不超過 1.0
+        let progress = myEnergy_eV / V_barrier;
+      
+      // 視覺優化：限制 progress 不要太接近 1，否則看起來像撞到牆才回頭
+      // 設定上限 0.85，代表被擋住的電子最遠只能飛到 85% 的距離
+        if (progress > 0.85) progress = 0.85;
+      
+      // 算出螢幕上的折返座標
+        turnX = cathX + 15 + (dist * progress);
     }
 
+  // 將計算好的命運推入陣列
     state.electrons.push({
       x: x, y: y,
       vx: speed, 
-      vy: (Math.random() - 0.5) * 1.5, // 微微的上下飄動
-      turnX: turnX // 把命運寫在電子身上
+      vy: (Math.random() - 0.5) * 1.5,
+      turnX: turnX 
     });
   }
 
