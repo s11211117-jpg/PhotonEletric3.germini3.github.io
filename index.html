@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>光電效應實驗模擬器（公制單位版）</title>
+  <title>光電效應實驗模擬器（物理修正版）</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     /* --- 全域設定 --- */
@@ -122,7 +122,7 @@
     .ammeter-box {
       position: absolute; top: 20px; right: 20px;
       background: #0f172a; border: 2px solid #334155;
-      border-radius: 8px; padding: 10px; width: 140px; /* 稍微加寬以容納科學記號 */
+      border-radius: 8px; padding: 10px; width: 140px;
       text-align: center; z-index: 20;
       box-shadow: 0 10px 20px rgba(0,0,0,0.5);
     }
@@ -134,7 +134,7 @@
     <h1 class="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
       光電效應實驗室 <span class="text-sm text-slate-300 border border-slate-600 rounded px-2 py-0.5 ml-2 align-middle">SI Metric</span>
     </h1>
-    <p class="text-slate-400 text-xs md:text-sm mt-1">Photoelectric Effect: SI Units Simulation (Joules, Volts, Amperes)</p>
+    <p class="text-slate-400 text-xs md:text-sm mt-1">Photoelectric Effect Simulation (Corrected Physics)</p>
   </header>
 
   <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full max-w-7xl">
@@ -271,8 +271,8 @@
 
 <script>
 /**
- * 光電效應模擬器 (SI 公制單位版)
- * 使用真實物理常數計算：Joules, Coulombs, Hertz, Volts
+ * 光電效應模擬器 (SI 公制單位版 - 物理修正版)
+ * 修復反向電壓動畫邏輯與物理計算
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -354,7 +354,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // 輔助：科學記號格式化
   function toSci(num, decimal = 2) {
     if (num === 0) return "0.00";
-    // 處理極小數值的顯示優化
     if (Math.abs(num) < 1e-25) return "0.00"; 
     return num.toExponential(decimal).replace("e+", "e").replace("e", "e");
   }
@@ -414,46 +413,47 @@ document.addEventListener('DOMContentLoaded', () => {
     updatePhysics();
   }
 
-  // --- 3. 核心物理引擎 (Physics Engine) ---
+  // --- 3. 核心物理引擎 (Physics Engine - Improved) ---
   function updatePhysics() {
-    // 讀取輸入
     const f_in = parseFloat(els.freq.value);
     const i_in = parseInt(els.int.value);
     const t_in = parseFloat(els.thresh.value);
-    const v_in = parseFloat(els.volt.value); // 反向電壓 (Volts)
+    const v_in = parseFloat(els.volt.value); 
 
-    // 換算為公制
     const f_hz = f_in * SCALE_FREQ;
     const t_hz = t_in * SCALE_FREQ;
 
     // 1. 能量計算 (Joules)
-    const E_joule = H * f_hz;       // E = hf
-    const W_joule = H * t_hz;       // W = hf0
-    const K_joule = Math.max(0, E_joule - W_joule); // Kmax = E - W
+    const E_joule = H * f_hz;       
+    const W_joule = H * t_hz;       
+    const K_joule = Math.max(0, E_joule - W_joule);
 
-    // 2. 截止電壓 (Volts)
-    // Kmax (J) = q (C) * Vstop (V)  => Vstop = Kmax / q
-    const V_stop = K_joule / Q; 
+    // 2. 截止電壓
+    const V_stop = (K_joule > 0) ? (K_joule / Q) : 0; 
 
     // 3. 電流計算 (模擬)
     let fraction = 0;
     
-    if (K_joule > 0) {
-      if (v_in >= V_stop) {
-        fraction = 0;
-      } else if (v_in < 0) {
+    if (K_joule <= 1e-25) {
+      fraction = 0; // 能量不足
+    } else {
+      if (v_in < 0) {
         fraction = 1; // 加速電壓
+      } else if (v_in >= V_stop) {
+        fraction = 0; // 完全被擋
       } else {
-        // 線性模擬：電壓越接近 V_stop，電流越小
-        fraction = 1 - (v_in / V_stop);
+        // 線性模擬電流下降
+        if (V_stop > 1e-6) {
+          fraction = 1 - (v_in / V_stop);
+        } else {
+          fraction = 0;
+        }
       }
     }
     
-    // 計算模擬電流 (Amperes)
-    // 假設最大光強對應約 12 * 2.5 nA 的等級
     const current_amp = i_in * fraction * 2.5 * SCALE_CURRENT;
 
-    // 4. 更新全域狀態
+    // 4. 更新狀態
     phys = { 
       f_input: f_in, f_hz, 
       i: i_in, 
@@ -470,7 +470,6 @@ document.addEventListener('DOMContentLoaded', () => {
     els.vThresh.innerText = t_in.toFixed(1);
     els.vVolt.innerText = v_in.toFixed(2);
     
-    // 使用科學記號顯示能量
     els.dWork.innerText = toSci(W_joule);
     els.dKe.innerText = toSci(K_joule);
     els.dCurr.innerText = toSci(current_amp);
@@ -479,7 +478,6 @@ document.addEventListener('DOMContentLoaded', () => {
     els.eqW.innerText = toSci(W_joule);
     els.eqK.innerText = toSci(K_joule);
 
-    // 更新儀器
     els.ammeter.innerText = toSci(current_amp);
     
     const color = getHslColor(f_in);
@@ -495,8 +493,6 @@ document.addEventListener('DOMContentLoaded', () => {
       els.lens.style.boxShadow = 'none';
     }
 
-    // 記錄歷史 (儲存為 nA 以便繪圖顯示幅度，或直接存 Amp 但繪圖時正規化)
-    // 這裡為了繪圖方便，我們存 "相對強度" (0-30 scale)
     state.history.push(phys.current / SCALE_CURRENT); 
     if(state.history.length > 200) state.history.shift();
 
@@ -507,7 +503,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function startAutoMeasure() {
     if (state.measuring) return;
     
-    if (phys.K_joule <= 1e-25) { // 能量極小視為 0
+    if (phys.K_joule <= 1e-25) { 
       alert("能量不足 (f < f₀)，無光電子產生，無法測量截止電壓。");
       return;
     }
@@ -522,13 +518,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     state.measureTimer = setInterval(() => {
       let v = parseFloat(els.volt.value);
-      v += 0.02; // 稍微放慢步進以求精確
-      if (v > 5) v = 5; // 限制最大掃描電壓
+      v += 0.02; 
+      if (v > 5) v = 5; 
       
       els.volt.value = v;
       updatePhysics();
 
-      // 當電流歸零 (小於極小值)
       if (phys.current <= 0.05 * SCALE_CURRENT || v >= 5) {
         finishMeasure();
       }
@@ -546,7 +541,7 @@ document.addEventListener('DOMContentLoaded', () => {
     drawStopChart();
   }
 
-  // --- 5. 動畫渲染 ---
+  // --- 5. 動畫渲染 (Animation Loop - Improved) ---
   function animationLoop() {
     const ctx = ctxs.tube;
     const w = state.w;
@@ -559,6 +554,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const plateH = h * 0.5;
     const cathX = w * 0.25;
     const anoX = w * 0.75;
+    const distance = anoX - cathX;
 
     ctx.fillStyle = '#64748b';
     ctx.fillRect(cathX, plateY, 8, plateH); 
@@ -600,7 +596,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (p.progress >= 1) {
         createSpark(cx, cy, p.color);
-        // 有動能才產生電子
         if (phys.K_joule > 0 && Math.random() > 0.3) {
           spawnElectron(cx, cy);
         }
@@ -608,25 +603,43 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // 電子邏輯
+    // 電子邏輯 (修正版：根據電場強度決定折返位置)
     ctx.fillStyle = '#60a5fa';
     ctx.shadowBlur = 5;
     ctx.shadowColor = '#3b82f6';
 
     for (let i = state.electrons.length - 1; i >= 0; i--) {
       let e = state.electrons[i];
-      
-      let moveSpeed = e.vx;
-      
-      // 反向電壓減速邏輯
-      // V_stop 代表需要多少電壓才能完全擋住
-      // 如果 !e.willPass，代表此電子被擋住
-      if (!e.willPass && e.x > (cathX + anoX) * 0.4) {
-         moveSpeed = e.vx * (1 - (e.life / 40)); 
-         if (moveSpeed < -2) moveSpeed = -2;
+      let nextX = e.x;
+
+      if (e.willPass) {
+          // 能量足夠，直接通過
+          nextX += e.vx; 
+      } else {
+          // 能量不足，將被反向電壓擋回
+          // 計算折返點：V_in 越大，stopRatio 越小，越早回頭
+          let stopRatio = 1;
+          if (phys.v > 0.01) {
+             stopRatio = (phys.V_stop / phys.v) * e.energyFactor;
+          }
+          
+          if (stopRatio > 0.95) stopRatio = 0.95; 
+
+          const turnPoint = cathX + distance * stopRatio;
+
+          if (e.x < turnPoint) {
+             // 未達折返點，前進但減速
+             const distToTurn = turnPoint - e.x;
+             const slowdown = Math.min(1, distToTurn / 100);
+             nextX += e.vx * Math.max(0.2, slowdown);
+          } else {
+             // 超過折返點，後退
+             nextX -= e.vx * 0.5;
+             e.vy += (Math.random()-0.5) * 0.1;
+          }
       }
 
-      e.x += moveSpeed;
+      e.x = nextX;
       e.y += e.vy;
       e.life++;
 
@@ -635,11 +648,13 @@ document.addEventListener('DOMContentLoaded', () => {
       ctx.fill();
 
       if (e.x >= anoX) {
+        // 只有 willPass 的電子會撞擊產生火花並消失
         if (e.willPass) createSpark(e.x, e.y, '#93c5fd');
         state.electrons.splice(i, 1);
         continue;
       }
-      if (e.x < cathX - 20 || e.y < 0 || e.y > h || e.life > 200) {
+      // 左邊界或超時移除
+      if (e.x < cathX - 10 || e.y < 0 || e.y > h || e.life > 300) {
         state.electrons.splice(i, 1);
       }
     }
@@ -653,13 +668,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function spawnElectron(x, y) {
     const willPass = Math.random() < phys.fraction;
+    // 加入能量係數，使粒子行為不單調
+    const energyFactor = 0.9 + Math.random() * 0.1; 
     const baseSpeed = 2 + Math.random() * 2;
+    
     state.electrons.push({
       x: x, y: y,
       vx: baseSpeed,
       vy: (Math.random() - 0.5),
       life: 0,
-      willPass: willPass
+      willPass: willPass,
+      energyFactor: energyFactor
     });
   }
 
@@ -706,10 +725,9 @@ document.addEventListener('DOMContentLoaded', () => {
     ctx.strokeStyle = '#4ade80';
     ctx.lineWidth = 2;
 
-    const maxVal = 35; // 對應大約的顯示範圍
+    const maxVal = 35; 
     for (let i = 0; i < state.history.length; i++) {
       const x = (i / 200) * w;
-      // state.history 存的是相對值 (nA 數值)，所以直接用
       const y = h - (state.history[i] / maxVal) * h;
       if (i === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
@@ -737,21 +755,16 @@ document.addEventListener('DOMContentLoaded', () => {
     ctx.fillText('f (x10¹⁴)', w - 45, h - 5);
     ctx.fillText('V stop', 2, 12);
 
-    // 映射 (X: 頻率係數, Y: 電壓 Volts)
+    // 映射
     const fMin = 3, fMax = 15;
-    const vMax = 4; // 調整顯示範圍以適應真實數值
+    const vMax = 4;
     const mapX = (f) => 35 + ((f - fMin) / (fMax - fMin)) * (w - 35);
     const mapY = (v) => (h - 20) - (v / vMax) * (h - 20);
 
-    // 1. 理論線 (Slope = h/e)
-    // V = (h/e)*f - (W/e)
-    const slope = (H * SCALE_FREQ) / Q; // 約 0.41 V per 10^14 Hz
-    
+    // 1. 理論線
     const fStart = Math.max(fMin, phys.t_input);
     if (fStart < fMax) {
       const vStart = 0;
-      // 計算 fMax 處的理論 V_stop
-      // V = (h * (fMax - f0) * 10^14) / e
       const vEnd = (H * (fMax - phys.t_input) * SCALE_FREQ) / Q;
       
       ctx.beginPath();
