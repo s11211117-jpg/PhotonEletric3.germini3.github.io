@@ -608,42 +608,45 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // 電子邏輯
-    ctx.fillStyle = '#60a5fa';
-    ctx.shadowBlur = 5;
+    // ... (在 animationLoop 內部) ...
+
+    // 3. 電子運動邏輯
+    ctx.fillStyle = '#60a5fa'; 
+    ctx.shadowBlur = 4; 
     ctx.shadowColor = '#3b82f6';
 
     for (let i = state.electrons.length - 1; i >= 0; i--) {
       let e = state.electrons[i];
       
-      let moveSpeed = e.vx;
+      e.x += e.vx; // 移動
+      e.y += e.vy;
       
-      // 反向電壓減速邏輯
-      // V_stop 代表需要多少電壓才能完全擋住
-      // 如果 !e.willPass，代表此電子被擋住
-      if (!e.willPass && e.x > (cathX + anoX) * 0.4) {
-         moveSpeed = e.vx * (1 - (e.life / 40)); 
-         if (moveSpeed < -2) moveSpeed = -2;
+      // [新增] 折返邏輯：如果這顆電子有設定折返點，且飛過了頭 -> 掉頭
+      if (e.turnX !== null && e.x >= e.turnX && e.vx > 0) {
+        e.vx *= -1;     // 速度反轉 (變負的，往回飛)
+        e.turnX = null; // 標記已折返，避免重複判斷
       }
 
-      e.x += moveSpeed;
-      e.y += e.vy;
-      e.life++;
-
-      ctx.beginPath();
-      ctx.arc(e.x, e.y, 3, 0, Math.PI*2);
+      ctx.beginPath(); 
+      ctx.arc(e.x, e.y, 3, 0, Math.PI*2); 
       ctx.fill();
 
-      if (e.x >= anoX) {
-        if (e.willPass) createSpark(e.x, e.y, '#93c5fd');
+      // 邊界檢查
+      if (e.x >= state.anoX) { 
+        // 成功抵達陽極 (只有能量夠大的才會到這)
+        createSpark(e.x, e.y, '#93c5fd');
         state.electrons.splice(i, 1);
-        continue;
-      }
-      if (e.x < cathX - 20 || e.y < 0 || e.y > h || e.life > 200) {
+      } else if (e.x < state.cathX && e.vx < 0) { 
+        // [新增] 被反向電壓推回陰極，消失
+         state.electrons.splice(i, 1);
+      } else if (e.y < 0 || e.y > state.h) { 
+        // 飛出上下邊界
         state.electrons.splice(i, 1);
       }
     }
     ctx.shadowBlur = 0;
+
+    // ... (後面的 drawSparks 等等保持不變) ...
 
     drawSparks(ctx);
     drawCurrentChart();
@@ -651,15 +654,36 @@ document.addEventListener('DOMContentLoaded', () => {
     requestAnimationFrame(animationLoop);
   }
 
+  // --- 生成電子 (決定命運的地方) ---
   function spawnElectron(x, y) {
-    const willPass = Math.random() < phys.fraction;
-    const baseSpeed = 2 + Math.random() * 2;
+  // 1. 隨機決定這顆電子的能量 (0% ~ 100% 的最大動能)
+    const myEnergyRatio = Math.random(); 
+    const myEnergy = phys.K_joule * myEnergyRatio;
+  
+  // 2. 計算反向電壓形成的能量障壁 (Barrier = q * V)
+    const barrierEnergy = phys.v * Q; // Q 是全域變數 1.602e-19
+
+    let turnX = null; // 預設為 null 表示會通過
+    let speed = 2 + myEnergyRatio * 4; // 視覺速度：能量越大飛越快
+
+  // 3. 關鍵判斷：如果 "反向電壓存在" 且 "我的能量 < 障壁能量" -> 必須折返
+    if (phys.v > 0 && myEnergy < barrierEnergy) {
+     // 計算折返點：能量越低，越早折返；能量越高，飛越遠才折返
+       const dist = state.anoX - state.cathX;
+     
+     // 算出它能克服幾成的障壁 (0.0 ~ 1.0)
+     // 限制最多飛到 95% 的距離 (避免看起來像撞到對面才回頭，那樣很怪)
+       let progress = myEnergy / barrierEnergy;
+       if (progress > 0.95) progress = 0.95;
+     
+       turnX = state.cathX + 10 + (dist * progress);
+    }
+
     state.electrons.push({
       x: x, y: y,
-      vx: baseSpeed,
-      vy: (Math.random() - 0.5),
-      life: 0,
-      willPass: willPass
+      vx: speed, 
+      vy: (Math.random() - 0.5) * 1.5, // 微微的上下飄動
+      turnX: turnX // 把命運寫在電子身上
     });
   }
 
