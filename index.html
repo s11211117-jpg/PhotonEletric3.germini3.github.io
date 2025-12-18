@@ -669,7 +669,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function spawnElectron(x, y) {
     const willPass = Math.random() < phys.fraction;
     // 加入能量係數，使粒子行為不單調
-    const energyFactor = 0.9 + Math.random() * 0.1; 
+    const energyFactor = 0.8 + Math.random() * 0.2; 
     const baseSpeed = 2 + Math.random() * 2;
     
     state.electrons.push({
